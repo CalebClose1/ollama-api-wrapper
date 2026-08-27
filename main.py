@@ -2,6 +2,7 @@
 # 8/25/26
 # API Practice 
 
+import json
 import requests     #importing the requests Library 
 
 url = "http://localhost:11434/api/chat" #Local Host on my computer with the API listening on port 11434
@@ -23,18 +24,26 @@ while True:     #While loop to allow for continuous questions
     data = {        #Python Dictionary
         "model": "llama3.2",
         "messages": messages,      # Chat history stored in the dictionary key   
-        "stream": False
+        "stream": True
     }
 
 
-    response = requests.post(url, json = data)  #Send an HTTP POST request to url and include the contents of data as JSON.
+    response = requests.post(url, json = data, stream = True)  #send request to local server and stream response
 
-    result = response.json()    # Get ollamas answer
+    assistant_response = ""
 
+    for line in response.iter_lines():      #Process Each line as it arrives
+        chunk = json.loads(line)            #Convert the line from json to a python object
+        content = chunk["message"]["content"]
+        assistant_response += content
+        print(content, end="", flush = True)    #Print the response
+    
     messages.append({       #add the ollama response to the chat history 
         "role":"assistant",
-        "content":result["message"]["content"]
+        "content":assistant_response
     })
     
+    print() #New line when finished 
     
-    print(result["message"]["content"])    
+    
+    
